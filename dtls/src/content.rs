@@ -25,6 +25,7 @@ impl From<u8> for ContentType {
             21 => ContentType::Alert,
             22 => ContentType::Handshake,
             23 => ContentType::ApplicationData,
+            25 => ContentType::ConnectionID,
             _ => ContentType::Invalid,
         }
     }
