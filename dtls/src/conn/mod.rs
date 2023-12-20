@@ -669,6 +669,7 @@ impl DTLSConn {
                 content_len: handshake_fragment.len() as u16,
                 epoch: p.record.record_layer_header.epoch,
                 sequence_number: seq,
+                connection_id: Vec::new(),
             };
 
             let mut record_layer_header_bytes = vec![];

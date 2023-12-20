@@ -123,6 +123,7 @@ fn test_ccm_encryption_and_decryption() -> Result<()> {
         epoch: 0,
         sequence_number: 18,
         content_len: 3,
+        connection_id: Vec::new(),
     };
 
     let raw = vec![

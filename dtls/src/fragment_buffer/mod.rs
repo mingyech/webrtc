@@ -74,7 +74,7 @@ impl FragmentBuffer {
 
             if let Some(x) = self.cache.get_mut(&handshake_header.message_sequence) {
                 x.push(Fragment {
-                    record_layer_header,
+                    record_layer_header: record_layer_header.clone(),
                     handshake_header,
                     data,
                 });
