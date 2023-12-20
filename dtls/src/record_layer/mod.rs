@@ -45,6 +45,7 @@ impl RecordLayer {
                 epoch,
                 sequence_number: 0,
                 content_len: content.size() as u16,
+                connection_id: Vec::new(),
             },
             content,
         }

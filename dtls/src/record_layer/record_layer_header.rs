@@ -28,19 +28,22 @@ pub const PROTOCOL_VERSION1_2: ProtocolVersion = ProtocolVersion {
 };
 
 // https://tools.ietf.org/html/rfc4346#section-6.2.1
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct ProtocolVersion {
     pub major: u8,
     pub minor: u8,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub struct RecordLayerHeader {
     pub content_type: ContentType,
     pub protocol_version: ProtocolVersion,
     pub epoch: u16,
     pub sequence_number: u64, // uint48 in spec
     pub content_len: u16,
+
+    // Optional fields
+    pub connection_id: Vec<u8>,
 }
 
 impl RecordLayerHeader {
@@ -56,7 +59,7 @@ impl RecordLayerHeader {
 
         let be: [u8; 8] = self.sequence_number.to_be_bytes();
         writer.write_all(&be[2..])?; // uint48 in spec
-
+        writer.write_all(&self.connection_id)?;
         writer.write_u16::<BigEndian>(self.content_len)?;
 
         Ok(writer.flush()?)
@@ -85,6 +88,40 @@ impl RecordLayerHeader {
             epoch,
             sequence_number,
             content_len,
+            connection_id: Vec::new(),
+        })
+    }
+
+    pub fn unmarshal_cid<R: Read>(cid_len: usize, reader: &mut R) -> Result<Self> {
+        let content_type = reader.read_u8()?.into();
+
+        let mut connection_id = vec![0; cid_len];
+        if content_type == ContentType::ApplicationData {
+            reader.read_exact(&mut connection_id)?;
+        }
+
+        let major = reader.read_u8()?;
+        let minor = reader.read_u8()?;
+        let epoch = reader.read_u16::<BigEndian>()?;
+
+        // SequenceNumber is stored as uint48, make into uint64
+        let mut be: [u8; 8] = [0u8; 8];
+        reader.read_exact(&mut be[2..])?;
+        let sequence_number = u64::from_be_bytes(be);
+
+        let protocol_version = ProtocolVersion { major, minor };
+        if protocol_version != PROTOCOL_VERSION1_0 && protocol_version != PROTOCOL_VERSION1_2 {
+            return Err(Error::ErrUnsupportedProtocolVersion);
+        }
+        let content_len = reader.read_u16::<BigEndian>()?;
+
+        Ok(RecordLayerHeader {
+            content_type,
+            protocol_version,
+            epoch,
+            sequence_number,
+            content_len,
+            connection_id,
         })
     }
 }
