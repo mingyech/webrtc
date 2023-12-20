@@ -96,7 +96,7 @@ impl RecordLayerHeader {
         let content_type = reader.read_u8()?.into();
 
         let mut connection_id = vec![0; cid_len];
-        if content_type == ContentType::ApplicationData {
+        if content_type == ContentType::ConnectionID {
             reader.read_exact(&mut connection_id)?;
         }
 

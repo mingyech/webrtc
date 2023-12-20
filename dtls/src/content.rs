@@ -13,6 +13,7 @@ pub enum ContentType {
     Alert = 21,
     Handshake = 22,
     ApplicationData = 23,
+    ConnectionID = 25,
     #[default]
     Invalid,
 }
