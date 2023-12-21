@@ -95,11 +95,6 @@ impl RecordLayerHeader {
     pub fn unmarshal_cid<R: Read>(cid_len: usize, reader: &mut R) -> Result<Self> {
         let content_type = reader.read_u8()?.into();
 
-        let mut connection_id = vec![0; cid_len];
-        if content_type == ContentType::ConnectionID {
-            reader.read_exact(&mut connection_id)?;
-        }
-
         let major = reader.read_u8()?;
         let minor = reader.read_u8()?;
         let epoch = reader.read_u16::<BigEndian>()?;
@@ -113,6 +108,12 @@ impl RecordLayerHeader {
         if protocol_version != PROTOCOL_VERSION1_0 && protocol_version != PROTOCOL_VERSION1_2 {
             return Err(Error::ErrUnsupportedProtocolVersion);
         }
+
+        let mut connection_id = vec![0; cid_len];
+        if content_type == ContentType::ConnectionID {
+            reader.read_exact(&mut connection_id)?;
+        }
+
         let content_len = reader.read_u16::<BigEndian>()?;
 
         Ok(RecordLayerHeader {
