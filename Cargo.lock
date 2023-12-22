@@ -2866,6 +2866,7 @@ dependencies = [
  "async-trait",
  "bincode",
  "byteorder",
+ "bytes",
  "cbc",
  "ccm",
  "chrono",

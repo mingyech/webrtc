@@ -8,6 +8,7 @@ pub mod crypto_gcm;
 use std::convert::TryFrom;
 use std::sync::Arc;
 
+use bytes::BufMut;
 use der_parser::oid;
 use der_parser::oid::Oid;
 use rcgen::KeyPair;
@@ -15,9 +16,11 @@ use ring::rand::SystemRandom;
 use ring::signature::{EcdsaKeyPair, Ed25519KeyPair};
 
 use crate::curve::named_curve::*;
-use crate::error::*;
 use crate::record_layer::record_layer_header::*;
 use crate::signature_hash_algorithm::{HashAlgorithm, SignatureAlgorithm, SignatureHashAlgorithm};
+use crate::{content, error::*};
+
+const SEQ_NUM_PLACEHOLDER: u64 = 0xffffffffffffffff;
 
 /// A X.509 certificate(s) used to authenticate a DTLS connection.
 #[derive(Clone, PartialEq, Debug)]
@@ -500,6 +503,33 @@ pub(crate) fn generate_aead_additional_data(h: &RecordLayerHeader, payload_len: 
     additional_data[11..].copy_from_slice(&(payload_len as u16).to_be_bytes());
 
     additional_data
+}
+
+// generate_aead_additional_data_cid generates additional data for AEAD ciphers
+// according to https://datatracker.ietf.org/doc/html/rfc9146#name-aead-ciphers
+pub fn generate_aead_additional_data_cid(
+    header: &RecordLayerHeader,
+    payload_len: usize,
+) -> Vec<u8> {
+    let mut buf = bytes::BytesMut::new();
+
+    buf.put_u64(SEQ_NUM_PLACEHOLDER);
+    buf.put_u8(content::ContentType::ConnectionID as u8);
+    buf.put_u8(header.connection_id.len() as u8);
+    buf.put_u8(header.protocol_version.major);
+    buf.put_u8(header.protocol_version.minor);
+    buf.put_u16(header.epoch);
+
+    // Sequence number (48 bits)
+    buf.put_uint(header.sequence_number, 6);
+
+    // Connection ID
+    buf.put_slice(&header.connection_id);
+
+    // Payload length
+    buf.put_u16(payload_len as u16);
+
+    buf.to_vec()
 }
 
 #[cfg(test)]

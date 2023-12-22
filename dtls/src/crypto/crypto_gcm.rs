@@ -101,7 +101,12 @@ impl CryptoGcm {
 
         let out = &r[RECORD_LAYER_HEADER_SIZE + 8..];
 
-        let additional_data = generate_aead_additional_data(&h, out.len() - CRYPTO_GCM_TAG_LENGTH);
+        let additional_data = match h.content_type {
+            ContentType::ConnectionID => {
+                generate_aead_additional_data_cid(&h, out.len() - CRYPTO_GCM_TAG_LENGTH)
+            }
+            _ => generate_aead_additional_data(&h, out.len() - CRYPTO_GCM_TAG_LENGTH),
+        };
 
         let mut buffer: Vec<u8> = Vec::new();
         buffer.extend_from_slice(out);

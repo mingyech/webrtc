@@ -12,6 +12,7 @@ repository = "https://github.com/webrtc-rs/dtls"
 [dependencies]
 util = { version = "0.8", path = "../util", package = "webrtc-util", default-features = false, features = ["conn"] }
 
+bytes = "1.5.0"
 byteorder = "1"
 rand_core = "0.6"
 hkdf = "0.12"
