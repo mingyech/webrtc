@@ -94,16 +94,16 @@ impl CryptoGcm {
             return Ok(r.to_vec());
         }
 
-        if r.len() <= (RECORD_LAYER_HEADER_SIZE + 8) {
+        if r.len() <= (h.size() + 8) {
             return Err(Error::ErrNotEnoughRoomForNonce);
         }
 
         let mut nonce = vec![];
         nonce.extend_from_slice(&self.remote_write_iv[..4]);
-        nonce.extend_from_slice(&r[RECORD_LAYER_HEADER_SIZE..RECORD_LAYER_HEADER_SIZE + 8]);
+        nonce.extend_from_slice(&r[h.size()..h.size() + 8]);
         let nonce = GenericArray::from_slice(&nonce);
 
-        let out = &r[RECORD_LAYER_HEADER_SIZE + 8..];
+        let out = &r[h.size() + 8..];
 
         let additional_data = match h.content_type {
             ContentType::ConnectionID => {
@@ -119,8 +119,8 @@ impl CryptoGcm {
             .decrypt_in_place(nonce, &additional_data, &mut buffer)
             .map_err(|e| Error::Other(e.to_string()))?;
 
-        let mut d = Vec::with_capacity(RECORD_LAYER_HEADER_SIZE + buffer.len());
-        d.extend_from_slice(&r[..RECORD_LAYER_HEADER_SIZE]);
+        let mut d = Vec::with_capacity(h.size() + buffer.len());
+        d.extend_from_slice(&r[..h.size()]);
         d.extend_from_slice(&buffer);
 
         Ok(d)

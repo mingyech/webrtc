@@ -102,4 +102,8 @@ impl RecordLayerHeader {
             connection_id,
         })
     }
+
+    pub fn size(&self) -> usize {
+        return RECORD_LAYER_HEADER_SIZE + self.connection_id.len();
+    }
 }
