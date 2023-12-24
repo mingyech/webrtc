@@ -516,17 +516,12 @@ pub fn generate_aead_additional_data_cid(
     buf.put_u64(SEQ_NUM_PLACEHOLDER);
     buf.put_u8(content::ContentType::ConnectionID as u8);
     buf.put_u8(header.connection_id.len() as u8);
+    buf.put_u8(content::ContentType::ConnectionID as u8);
     buf.put_u8(header.protocol_version.major);
     buf.put_u8(header.protocol_version.minor);
     buf.put_u16(header.epoch);
-
-    // Sequence number (48 bits)
     buf.put_uint(header.sequence_number, 6);
-
-    // Connection ID
     buf.put_slice(&header.connection_id);
-
-    // Payload length
     buf.put_u16(payload_len as u16);
 
     buf.to_vec()
