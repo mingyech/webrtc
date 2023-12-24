@@ -83,8 +83,12 @@ impl CryptoGcm {
     }
 
     pub fn decrypt(&self, r: &[u8]) -> Result<Vec<u8>> {
+        return Self::decrypt_cid(&self, 0, r);
+    }
+
+    pub fn decrypt_cid(&self, cid_len: usize, r: &[u8]) -> Result<Vec<u8>> {
         let mut reader = Cursor::new(r);
-        let h = RecordLayerHeader::unmarshal(&mut reader)?;
+        let h = RecordLayerHeader::unmarshal_cid(cid_len, &mut reader)?;
         if h.content_type == ContentType::ChangeCipherSpec {
             // Nothing to encrypt with ChangeCipherSpec
             return Ok(r.to_vec());

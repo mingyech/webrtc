@@ -66,30 +66,7 @@ impl RecordLayerHeader {
     }
 
     pub fn unmarshal<R: Read>(reader: &mut R) -> Result<Self> {
-        let content_type = reader.read_u8()?.into();
-        let major = reader.read_u8()?;
-        let minor = reader.read_u8()?;
-        let epoch = reader.read_u16::<BigEndian>()?;
-
-        // SequenceNumber is stored as uint48, make into uint64
-        let mut be: [u8; 8] = [0u8; 8];
-        reader.read_exact(&mut be[2..])?;
-        let sequence_number = u64::from_be_bytes(be);
-
-        let protocol_version = ProtocolVersion { major, minor };
-        if protocol_version != PROTOCOL_VERSION1_0 && protocol_version != PROTOCOL_VERSION1_2 {
-            return Err(Error::ErrUnsupportedProtocolVersion);
-        }
-        let content_len = reader.read_u16::<BigEndian>()?;
-
-        Ok(RecordLayerHeader {
-            content_type,
-            protocol_version,
-            epoch,
-            sequence_number,
-            content_len,
-            connection_id: Vec::new(),
-        })
+        return Self::unmarshal_cid(0, reader);
     }
 
     pub fn unmarshal_cid<R: Read>(cid_len: usize, reader: &mut R) -> Result<Self> {

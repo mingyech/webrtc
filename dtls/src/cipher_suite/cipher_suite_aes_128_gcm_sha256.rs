@@ -16,6 +16,16 @@ impl CipherSuiteAes128GcmSha256 {
     pub fn new(rsa: bool) -> Self {
         CipherSuiteAes128GcmSha256 { gcm: None, rsa }
     }
+
+    pub fn decrypt_cid(&self, cid_len: usize, input: &[u8]) -> Result<Vec<u8>> {
+        if let Some(cg) = &self.gcm {
+            cg.decrypt_cid(cid_len, input)
+        } else {
+            Err(Error::Other(
+                "CipherSuite has not been initialized, unable to decrypt".to_owned(),
+            ))
+        }
+    }
 }
 
 impl CipherSuite for CipherSuiteAes128GcmSha256 {
@@ -102,12 +112,6 @@ impl CipherSuite for CipherSuiteAes128GcmSha256 {
     }
 
     fn decrypt(&self, input: &[u8]) -> Result<Vec<u8>> {
-        if let Some(cg) = &self.gcm {
-            cg.decrypt(input)
-        } else {
-            Err(Error::Other(
-                "CipherSuite has not been initialized, unable to decrypt".to_owned(),
-            ))
-        }
+        return self.decrypt_cid(0, input);
     }
 }
